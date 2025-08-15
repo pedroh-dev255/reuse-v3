@@ -1,0 +1,75 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model users {
+  id              Int      @id @default(autoincrement())
+  profile_picture String?
+  name            String
+  email           String   @unique
+  password        String
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  produtos     produtos[]
+  trades       trades[]       @relation("UserTrades")
+  user_ratings user_ratings[]
+}
+
+model produtos {
+  id        Int     @id @default(autoincrement())
+  fotos     Json
+  user_id   Int
+  nome      String
+  tags      Json?
+  descricao String?
+  estado    String
+  valor     Float
+  city      String
+  state     String
+  status    Int
+
+  user    users    @relation(fields: [user_id], references: [id])
+  trades  trades[] @relation("ProductTrades")
+  offered trades[] @relation("OfferedProductTrades")
+}
+
+model trades {
+  id                 Int      @id @default(autoincrement())
+  user_id            Int
+  product_id         Int
+  offered_product_id Int
+  message            String?
+  status             Int
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  user        users    @relation("UserTrades", fields: [user_id], references: [id])
+  product     produtos @relation("ProductTrades", fields: [product_id], references: [id])
+  offeredProd produtos @relation("OfferedProductTrades", fields: [offered_product_id], references: [id])
+}
+
+model user_ratings {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  trade_id   Int
+  rating     Int
+  created_at DateTime @default(now())
+
+  user users @relation(fields: [user_id], references: [id])
+}
+
+model system_logs {
+  id          Int      @id @default(autoincrement())
+  user_id     Int? // ID do usuário que causou o log, se aplicável
+  action      String // Tipo da ação, ex: "login_attempt", "create_record", "update_record", etc.
+  description String? // Detalhes do que aconteceu
+  ip_address  String? // IP do usuário (se disponível)
+  user_agent  String? // User-Agent do navegador ou cliente (se disponível)
+  created_at  DateTime @default(now())
+}
